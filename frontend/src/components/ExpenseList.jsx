@@ -17,14 +17,32 @@ const ExpenseList = ({ expenses, onDelete, onEdit }) => {
     return categoryMap[category] || "💰";
   };
 
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return "Invalid Date";
+      }
+      return date.toLocaleDateString();
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Invalid Date";
+    }
+  };
+
+  const formatAmount = (amount) => {
+    const num = Number(amount);
+    return isNaN(num) ? "0.00" : num.toFixed(2);
+  };
+
   return (
     <div className="mt-8">
       <h3 className="text-xl font-bold mb-4 text-gray-700">Recent Expenses</h3>
       <div className="space-y-3">
         <AnimatePresence>
-          {expenses.map((expense) => (
+          {Array.isArray(expenses) && expenses.map((expense) => (
             <motion.div
-              key={expense.id}
+              key={expense.id || `${expense.date}-${expense.amount}-${Math.random()}`}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
@@ -32,17 +50,21 @@ const ExpenseList = ({ expenses, onDelete, onEdit }) => {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <span className="text-2xl">{getCategoryEmoji(expense.category)}</span>
+                  <span className="text-2xl">
+                    {getCategoryEmoji(expense.category)}
+                  </span>
                   <div>
-                    <h4 className="font-medium text-gray-800">{expense.title}</h4>
+                    <h4 className="font-medium text-gray-800">
+                      {expense.title || "Untitled"}
+                    </h4>
                     <p className="text-sm text-gray-500">
-                      {new Date(expense.date).toLocaleDateString()}
+                      {formatDate(expense.date)}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
                   <span className="text-lg font-bold text-purple-600">
-                    ${Number(expense.amount).toFixed(2)}
+                    ${formatAmount(expense.amount)}
                   </span>
                   <div className="flex space-x-2">
                     <motion.button
@@ -67,6 +89,15 @@ const ExpenseList = ({ expenses, onDelete, onEdit }) => {
             </motion.div>
           ))}
         </AnimatePresence>
+        {(!Array.isArray(expenses) || expenses.length === 0) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-8 text-gray-500"
+          >
+            No expenses found. Add your first expense!
+          </motion.div>
+        )}
       </div>
     </div>
   );

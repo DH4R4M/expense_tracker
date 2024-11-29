@@ -8,6 +8,7 @@ import { fetchExpenses, addExpense, updateExpense, deleteExpense } from "./servi
 
 const ExpenseTracker = () => {
   const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [editingExpense, setEditingExpense] = useState(null);
   const [totalSpent, setTotalSpent] = useState(0);
 
@@ -22,10 +23,14 @@ const ExpenseTracker = () => {
 
   const loadExpenses = async () => {
     try {
+      setLoading(true);
       const data = await fetchExpenses();
-      setExpenses(data);
+      setExpenses(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error loading expenses:", error);
+      setExpenses([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,6 +61,8 @@ const ExpenseTracker = () => {
   };
 
   const calculateMonthlyTotal = () => {
+    if (!Array.isArray(expenses) || expenses.length === 0) return 0;
+    
     const currentMonth = new Date().getMonth();
     return expenses.reduce((total, expense) => {
       const expenseMonth = new Date(expense.date).getMonth();
@@ -67,10 +74,19 @@ const ExpenseTracker = () => {
   };
 
   const calculateDailyAverage = () => {
-    if (expenses.length === 0) return 0;
+    if (!Array.isArray(expenses) || expenses.length === 0) return 0;
+    
     const total = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
     return total / expenses.length;
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl text-gray-600">Loading expenses...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-suns-purple-50 to-white">
